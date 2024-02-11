@@ -136,10 +136,14 @@ def claim_yo_beans(driver):
         print("Error occurred while finding and clicking Claim button.")
 
 
-def claim_loop(credential_list):
+def claim_loop(credential_list, stop_event):
     driver = setup_browser()
 
     for user in credential_list:
+        if stop_event.is_set():
+            break  # Exit the loop if stop event is set
         claim_process(driver, credential_list, credential_list.index(user))
+        if stop_event.is_set():
+            break  # Exit the loop if stop event is set
 
     driver.close()
