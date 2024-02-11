@@ -4,7 +4,7 @@
 
 ```
 example_email@gmail.com
- PAssWord
+PAssWord
  
 example@gmail.com
 password
