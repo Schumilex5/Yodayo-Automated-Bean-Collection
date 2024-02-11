@@ -1,5 +1,0 @@
-example_email@gmail.com
-PAssWord
-
-example@gmail.com
-password

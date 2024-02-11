@@ -5,24 +5,24 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from claim_process import claim_process
-import credentials
 import time
 
 
 def go_to_login_page(driver):
+    wait()
     # Wait for the element to be clickable
     login_link = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//a[@href='/login/']")))
 
     # Click on the login link
     login_link.click()
-    wait()
+    wait_page_load(driver)
 
 
 def click_login_button(driver):
     # Find the login button by inner text and click it
     login_button = driver.find_element(By.XPATH, "//button[text()='Login']")
     login_button.click()
-    wait(3)
+    wait_page_load(driver)
 
 
 def click_logout_button(driver):
@@ -34,7 +34,7 @@ def click_logout_button(driver):
 
         # Click the Logout element
         logout_element.click()
-        wait()
+        wait_page_load(driver)
     except Exception as e:
         print("Error occurred while finding and clicking Log out element:", e)
 
@@ -43,13 +43,24 @@ def setup_browser():
     chrome_options = Options()
     chrome_options.add_experimental_option("detach", True)
     driver = webdriver.Chrome(options=chrome_options)
+
     driver.get("https://yodayo.com/")
     driver.maximize_window()
-    wait()
+
+    wait_page_load(driver)
+
     return driver
 
 
-def wait(dur=1):
+def wait_page_load(driver):
+    # Wait until the page is fully loaded
+    wait_time = 10
+    WebDriverWait(driver, wait_time).until(
+        lambda x: x.execute_script("return document.readyState == 'complete'")
+    )
+
+
+def wait(dur=3):
     # Increase the general wait time if your browser is giga slow.
     plus_waiting_time_you_want = 0
 
@@ -72,28 +83,30 @@ def find_and_tick_checkboxes(driver):
         print("Skipping checkboxes, either missing or unable to locate them.")
 
 
-def fill_email_field(driver, index):
+def fill_email_field(driver, credential_list, index):
     email_pos_in_list = 0
     email_field = driver.find_element(By.XPATH, "//input[@placeholder='Email']")
-    email_field.send_keys(credentials.credential_list[index][email_pos_in_list])
+    email_field.send_keys(credential_list[index][email_pos_in_list])
 
 
-def fill_password_field(driver, index):
+def fill_password_field(driver, credential_list, index):
     passw_pos_in_list = 1
     password_field = driver.find_element(By.XPATH, "//input[@placeholder='Password']")
-    password_field.send_keys(credentials.credential_list[index][passw_pos_in_list])
+    password_field.send_keys(credential_list[index][passw_pos_in_list])
 
 
 def find_and_click_profile_picture(driver):
     try:
         # Wait for the profile picture element to be clickable
+        wait()
         profile_picture = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//img[@alt='Profile picture']"))
         )
 
         # Click on the profile picture
         profile_picture.click()
-        wait()
+
+        wait_page_load(driver)
     except Exception as e:
         print("Error occurred while finding and clicking profile picture:", e)
 
@@ -107,7 +120,7 @@ def find_and_click_claim_yobeans(driver):
 
         # Click on the Claim YoBeans link
         claim_yobeans_link.click()
-        wait()
+        wait_page_load(driver)
     except Exception as e:
         print("Error occurred while finding and clicking Claim YoBeans link.")
 
@@ -118,7 +131,7 @@ def claim_yo_beans(driver):
 
         # Execute JavaScript to click on the button
         driver.execute_script("arguments[0].click();", claim_button)
-        wait()
+        wait_page_load(driver)
     except Exception as e:
         print("Error occurred while finding and clicking Claim button.")
 
@@ -127,6 +140,6 @@ def claim_loop(credential_list):
     driver = setup_browser()
 
     for user in credential_list:
-        claim_process(driver, credential_list.index(user))
+        claim_process(driver, credential_list, credential_list.index(user))
 
     driver.close()

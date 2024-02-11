@@ -51,12 +51,15 @@ class UserPasswordGUI:
                         password = lines[i+1].strip()
                         credential_list.append((email, password))
 
-                        claim_loop(credential_list)
+                claim_loop(credential_list)
 
-                    messagebox.showinfo("Program Executed", "Main loop executed successfully!")
+                messagebox.showinfo("Program Executed", "Main loop executed successfully!")
             else:
                 messagebox.showerror("Error", "Please select a file first.")
         except FileNotFoundError:
             messagebox.showerror("Error", "File not found.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+        # Close the window
+        self.root.destroy()
