@@ -1,6 +1,8 @@
 # Claim your beans with automation
 
-## Download the latest release from https://github.com/Schumilex5/Yodayo-Automated-Bean-Collection/releases, give it a txt file that has your email/password combos, in a manner like this: 
+## Download the latest release from 
+https://github.com/Schumilex5/Yodayo-Automated-Bean-Collection/releases
+## give it a txt file that has your email/password combos, in a manner like this: 
 
 
 ```
