@@ -9,6 +9,8 @@ def main_loop():
     for user in credential_list:
         claim_process(driver, credential_list.index(user))
 
+    driver.close()
+
 
 if __name__ == "__main__":
     main_loop()
