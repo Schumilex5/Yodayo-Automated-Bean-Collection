@@ -4,6 +4,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium import webdriver
+from claim_process import claim_process
 import credentials
 import time
 
@@ -120,3 +121,12 @@ def claim_yo_beans(driver):
         wait()
     except Exception as e:
         print("Error occurred while finding and clicking Claim button.")
+
+
+def claim_loop(credential_list):
+    driver = setup_browser()
+
+    for user in credential_list:
+        claim_process(driver, credential_list.index(user))
+
+    driver.close()

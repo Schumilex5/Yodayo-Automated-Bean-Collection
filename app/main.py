@@ -1,15 +1,11 @@
-from claim_process import claim_process
-from credentials import credential_list
-from utyl import setup_browser
+import tkinter as tk
+from GUI import UserPasswordGUI
 
 
 def main_loop():
-    driver = setup_browser()
-
-    for user in credential_list:
-        claim_process(driver, credential_list.index(user))
-
-    driver.close()
+    root = tk.Tk()  # Define 'root' here
+    app = UserPasswordGUI(root)
+    root.mainloop()
 
 
 if __name__ == "__main__":
