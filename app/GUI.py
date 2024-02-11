@@ -1,7 +1,13 @@
+import ctypes
+import tkinter.ttk as ttk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from utyl import claim_loop
 import threading
+
+# Specify application is a Windows application
+ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
 
 
 class UserPasswordGUI:
@@ -38,6 +44,27 @@ class UserPasswordGUI:
         self.is_running = False
         self.stop_event = None
 
+        # Create a Treeview widget to display email and password data
+        self.tree = tk.ttk.Treeview(root, columns=("Email", "Password"), show="headings")
+        self.tree.heading("Email", text="Email")
+        self.tree.heading("Password", text="Password")
+        self.tree.pack(expand=True, fill="both")
+
+        # Entry fields for adding new data
+        self.email_label = tk.Label(root, text="Email:")
+        self.email_label.pack()
+        self.email_entry = tk.Entry(root)
+        self.email_entry.pack()
+
+        self.password_label = tk.Label(root, text="Password:")
+        self.password_label.pack()
+        self.password_entry = tk.Entry(root, show="*")
+        self.password_entry.pack()
+
+        # Button to add new row
+        self.add_button = tk.Button(root, text="Add", command=self.add_row, width=20)
+        self.add_button.pack(pady=5)
+
     def select_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         if file_path:
@@ -47,10 +74,8 @@ class UserPasswordGUI:
     def run_program(self):
         if not self.is_running:
             try:
+                credential_list = []
                 if self.file_path:
-                    self.is_running = True
-                    self.stop_button.configure(state='normal')  # Enable stop button
-                    credential_list = []
                     with open(self.file_path, "r") as file:
                         lines = file.readlines()
                         total_lines = len(lines)
@@ -59,19 +84,29 @@ class UserPasswordGUI:
                             email = lines[i].strip()
                             password = lines[i+1].strip()
                             credential_list.append((email, password))
+                else:
+                    # Get credentials from Entry fields
+                    email = self.email_entry.get()
+                    password = self.password_entry.get()
+                    if email and password:
+                        credential_list.append((email, password))
 
-                    # Create a threading event to signal when to stop the loop
-                    self.stop_event = threading.Event()
+                if credential_list:
+                    self.is_running = True
+                    self.stop_button.configure(state='normal')  # Enable stop button
+
+                    # Display data in Treeview widget
+                    for email, password in credential_list:
+                        self.tree.insert("", "end", values=(email, password))
 
                     # Start the claim_loop function in a separate thread
+                    self.stop_event = threading.Event()
                     self.process_thread = threading.Thread(
                         target=claim_loop, args=(credential_list, self.stop_event)
                     )
                     self.process_thread.start()
                 else:
-                    messagebox.showerror("Error", "Please select a file first.")
-            except FileNotFoundError:
-                messagebox.showerror("Error", "File not found.")
+                    messagebox.showerror("Error", "Please provide credentials either by selecting a file or manually entering them.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
@@ -84,3 +119,14 @@ class UserPasswordGUI:
             self.is_running = False
             messagebox.showinfo("Program Stopped", "The program has been stopped.")
             self.stop_button.configure(state='disabled')  # Disable stop button
+
+    def add_row(self):
+        email = self.email_entry.get()
+        password = self.password_entry.get()
+        if email and password:
+            self.tree.insert("", "end", values=(email, password))
+            # Clear entry fields after adding the row
+            self.email_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+
+
