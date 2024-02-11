@@ -70,34 +70,40 @@ class UserPasswordGUI:
         if file_path:
             self.file_path = file_path  # Update file path attribute
             self.label.config(text="Selected file: " + file_path)
+            self.populate_list_from_file()  # Populate the list from the selected file
+
+    def populate_list_from_file(self):
+        try:
+            credential_list = []
+            with open(self.file_path, "r") as file:
+                lines = file.readlines()
+                total_lines = len(lines)
+
+                for i in range(0, total_lines, 3):
+                    email = lines[i].strip()
+                    password = lines[i + 1].strip()
+                    credential_list.append((email, password))
+
+            # Display data in Treeview widget
+            for email, password in credential_list:
+                self.tree.insert("", "end", values=(email, password))
+
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def run_program(self):
         if not self.is_running:
             try:
-                credential_list = []
-                if self.file_path:
-                    with open(self.file_path, "r") as file:
-                        lines = file.readlines()
-                        total_lines = len(lines)
-
-                        for i in range(0, total_lines, 3):
-                            email = lines[i].strip()
-                            password = lines[i+1].strip()
-                            credential_list.append((email, password))
-                else:
-                    # Get credentials from Entry fields
-                    email = self.email_entry.get()
-                    password = self.password_entry.get()
-                    if email and password:
-                        credential_list.append((email, password))
-
-                if credential_list:
+                if self.tree.get_children():  # Check if the Treeview has any data
                     self.is_running = True
                     self.stop_button.configure(state='normal')  # Enable stop button
+                    credential_list = []
 
-                    # Display data in Treeview widget
-                    for email, password in credential_list:
-                        self.tree.insert("", "end", values=(email, password))
+                    # Get data from the Treeview
+                    for item in self.tree.get_children():
+                        email = self.tree.item(item, "values")[0]
+                        password = self.tree.item(item, "values")[1]
+                        credential_list.append((email, password))
 
                     # Start the claim_loop function in a separate thread
                     self.stop_event = threading.Event()
@@ -106,7 +112,7 @@ class UserPasswordGUI:
                     )
                     self.process_thread.start()
                 else:
-                    messagebox.showerror("Error", "Please provide credentials either by selecting a file or manually entering them.")
+                    messagebox.showerror("Error", "Please add data to the list first.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
