@@ -6,8 +6,8 @@
 example_email@gmail.com
  PAssWord
  
- example@gmail.com
- password
- ```
+example@gmail.com
+password
+```
 
 ## The program will go through all of them and claim the beans for you.
