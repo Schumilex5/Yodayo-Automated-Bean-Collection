@@ -37,7 +37,6 @@ class UserPasswordGUI:
         self.file_path = None
         self.is_running = False
         self.stop_event = None
-        self.file_path = None
 
     def select_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
