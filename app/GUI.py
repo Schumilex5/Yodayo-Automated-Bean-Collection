@@ -9,6 +9,48 @@ import threading
 ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 
+class EditPopup:
+    def __init__(self, parent, current_values, save_callback):
+        self.parent = parent
+        self.current_values = current_values
+        self.save_callback = save_callback
+
+        self.popup = tk.Toplevel(parent)
+        self.popup.title("Edit Entry")
+
+        # Calculate x and y position for the window to be centered
+        x = parent.winfo_rootx() + parent.winfo_width() // 2 - 200
+        y = parent.winfo_rooty() + parent.winfo_height() // 2 - 100
+
+        self.popup.geometry(f"300x200+{x}+{y}")
+
+        self.email_label = tk.Label(self.popup, text="Email:")
+        self.email_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+
+        # Entry field for email
+        self.email_entry = tk.Entry(self.popup, width=50)
+        self.email_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.email_entry.insert(0, current_values[0])
+
+        self.password_label = tk.Label(self.popup, text="Password:")
+        self.password_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+
+        # Entry field for password
+        self.password_entry = tk.Entry(self.popup, show="*", width=50)
+        self.password_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        self.password_entry.insert(0, current_values[1])
+
+        # Save button
+        self.save_button = tk.Button(self.popup, text="Save", command=self.save, width=40)
+        self.save_button.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+    def save(self):
+        email = self.email_entry.get()
+        password = self.password_entry.get()
+        if email and password:
+            self.save_callback((email, password))
+            self.popup.destroy()
+
 
 class UserPasswordGUI:
     def __init__(self, root):
@@ -45,65 +87,80 @@ class UserPasswordGUI:
         self.stop_event = None
 
         # Create a Treeview widget to display email and password data
-        self.tree = tk.ttk.Treeview(root, columns=("Email", "Password"), show="headings")
+        self.tree = ttk.Treeview(root, columns=("Email", "Password"), show="headings")
         self.tree.heading("Email", text="Email")
         self.tree.heading("Password", text="Password")
         self.tree.pack(expand=True, fill="both")
 
         # Entry fields for adding new data
-        self.email_label = tk.Label(root, text="Email:")
-        self.email_label.pack()
         self.email_entry = tk.Entry(root)
         self.email_entry.pack()
-
-        self.password_label = tk.Label(root, text="Password:")
-        self.password_label.pack()
         self.password_entry = tk.Entry(root, show="*")
         self.password_entry.pack()
 
         # Button to add new row
-        self.add_button = tk.Button(root, text="Add", command=self.add_row, width=20)
-        self.add_button.pack(pady=5)
+        self.add_button = tk.Button(root, text="Add", command=self.add_row)
+        self.add_button.pack()
+
+        # Button to remove row
+        self.remove_button = tk.Button(root, text="Remove", command=self.remove_row, state="disabled")
+        self.remove_button.pack()
+
+        # Button to edit row
+        self.edit_button = tk.Button(root, text="Edit", command=self.edit_row, state="disabled")
+        self.edit_button.pack()
+
+        # Bind selection event to enable/disable remove and edit buttons
+        self.tree.bind("<ButtonRelease-1>", self.on_item_selected)
+
+    def on_item_selected(self, event):
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.remove_button.configure(state="normal")
+            self.edit_button.configure(state="normal")
+        else:
+            self.remove_button.configure(state="disabled")
+            self.edit_button.configure(state="disabled")
 
     def select_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         if file_path:
             self.file_path = file_path  # Update file path attribute
             self.label.config(text="Selected file: " + file_path)
-            self.populate_list_from_file()  # Populate the list from the selected file
+            self.populate_list_from_file(file_path)
 
-    def populate_list_from_file(self):
+    def populate_list_from_file(self, file_path):
         try:
-            credential_list = []
-            with open(self.file_path, "r") as file:
+            with open(file_path, "r") as file:
                 lines = file.readlines()
                 total_lines = len(lines)
 
                 for i in range(0, total_lines, 3):
                     email = lines[i].strip()
                     password = lines[i + 1].strip()
-                    credential_list.append((email, password))
-
-            # Display data in Treeview widget
-            for email, password in credential_list:
-                self.tree.insert("", "end", values=(email, password))
-
+                    self.tree.insert("", "end", values=(email, password))
+        except FileNotFoundError:
+            messagebox.showerror("Error", "File not found.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
     def run_program(self):
         if not self.is_running:
             try:
-                if self.tree.get_children():  # Check if the Treeview has any data
+                if self.file_path:
                     self.is_running = True
                     self.stop_button.configure(state='normal')  # Enable stop button
                     credential_list = []
+                    with open(self.file_path, "r") as file:
+                        lines = file.read().splitlines()
+                        for line in lines:
+                            if line.strip():  # Check if line is not empty
+                                credential_list.append(line.strip())
 
-                    # Get data from the Treeview
-                    for item in self.tree.get_children():
-                        email = self.tree.item(item, "values")[0]
-                        password = self.tree.item(item, "values")[1]
-                        credential_list.append((email, password))
+                    # Display data in Treeview widget
+                    for line in credential_list:
+                        email, password = line.split()
+                        self.tree.insert("", "end", values=(email, password))
 
                     # Start the claim_loop function in a separate thread
                     self.stop_event = threading.Event()
@@ -112,7 +169,9 @@ class UserPasswordGUI:
                     )
                     self.process_thread.start()
                 else:
-                    messagebox.showerror("Error", "Please add data to the list first.")
+                    messagebox.showerror("Error", "Please select a file first.")
+            except FileNotFoundError:
+                messagebox.showerror("Error", "File not found.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
@@ -131,8 +190,25 @@ class UserPasswordGUI:
         password = self.password_entry.get()
         if email and password:
             self.tree.insert("", "end", values=(email, password))
-            # Clear entry fields after adding the row
             self.email_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
+
+    def remove_row(self):
+        selected_items = self.tree.selection()
+        for item in selected_items:
+            self.tree.delete(item)
+
+    def edit_row(self):
+        selected_items = self.tree.selection()
+        for item in selected_items:
+            current_values = self.tree.item(item, "values")
+            if current_values:
+                popup = EditPopup(self.root, current_values, self.update_row)
+
+    def update_row(self, new_values):
+        selected_items = self.tree.selection()
+        for item in selected_items:
+            self.tree.item(item, values=new_values)
+
 
 
