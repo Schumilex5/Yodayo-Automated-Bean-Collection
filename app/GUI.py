@@ -167,7 +167,6 @@ class UserPasswordGUI:
                     messagebox.showerror("Error", "No data available. Please add data before running.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
-        self.stop_program()
 
     def stop_program(self):
         if self.is_running and self.stop_event is not None:
