@@ -127,13 +127,16 @@ def find_and_click_claim_yobeans(driver):
 
 def claim_yo_beans(driver):
     try:
-        claim_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Claim')]")
-
-        # Execute JavaScript to click on the button
-        driver.execute_script("arguments[0].click();", claim_button)
         wait_page_load(driver)
+        # Wait for the Claim button to be clickable
+        claim_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'Claim')]"))
+        )
+
+        # Click on the button
+        driver.execute_script("arguments[0].click();", claim_button)
     except Exception as e:
-        print("Error occurred while finding and clicking Claim button.")
+        print("Error occurred while finding and clicking Claim button.", e)
 
 
 def claim_loop(credential_list, stop_event):
