@@ -14,6 +14,9 @@ def claim_process(driver, credentials, index):
 
     # Tick all checkboxes if new to site
     utyl.find_and_tick_checkboxes(driver)
+    
+    # Click dismiss yobean changes
+    utyl.dismiss_button_click(driver)
 
     # Find any click profile picture
     utyl.find_and_click_profile_picture(driver)

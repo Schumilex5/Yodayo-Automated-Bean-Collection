@@ -150,3 +150,22 @@ def claim_loop(credential_list, stop_event):
             break  # Exit the loop if stop event is set
 
     driver.close()
+
+
+def dismiss_button_click(driver):
+    try:
+        # Wait for the page to load
+        wait_page_load(driver)
+        
+        try:
+            # Wait for the Dismiss button to be present (up to 5 seconds)
+            dismiss_button = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.XPATH, "//button[contains(text(), 'Dismiss')]"))
+            )
+            
+            # Click the button
+            driver.execute_script("arguments[0].click();", dismiss_button)
+        except Exception(TimeoutError):
+            print("Dismiss button did not appear within 5 seconds, skipping.")
+    except Exception as e:
+        print("Error occurred while finding and clicking Dismiss button.", e)
